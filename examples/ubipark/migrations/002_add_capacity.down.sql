@@ -1,0 +1,1 @@
+ALTER TABLE parkings DROP COLUMN IF EXISTS status;

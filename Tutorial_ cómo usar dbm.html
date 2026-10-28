@@ -1,0 +1,432 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Tutorial: cómo usar <code>dbm</code></h1>
+<p>Esta guía te lleva paso a paso desde cero hasta tener un proyecto con
+migraciones, cambios de datos y seeds corriendo contra PostgreSQL (el mismo
+flujo aplica a MongoDB, con las diferencias que se marcan en cada sección).</p>
+<hr>
+<h2>1. Instalación</h2>
+<p>Descomprime <code>dbm.zip</code> y prepara el proyecto:</p>
+<pre><code class="language-bash">cd dbm
+pnpm install
+pnpm build
+</code></pre>
+<p>Esto genera <code>dist/</code>. A partir de aquí puedes invocar la CLI de dos formas:</p>
+<pre><code class="language-bash"># Opción A: exponer el comando &#34;dbm&#34; globalmente
+pnpm link --global
+dbm --help
+
+# Opción B: sin link, llamando directo al archivo compilado
+node dist/cli/cli.js --help
+</code></pre>
+<p>En el resto del tutorial usamos <code>dbm</code>, pero puedes reemplazarlo por
+<code>node dist/cli/cli.js</code> si no hiciste el link global.</p>
+<blockquote>
+<p><strong>Windows y pnpm:</strong> <code>pnpm</code> no sirve para ejecutar un archivo <code>.js</code>: <code>pnpm .\dist\cli\cli.js ...</code> falla con <em>"no es una aplicación Win32 válida"</em>. Usa <code>node .\dist\cli\cli.js ...</code> o el comando <code>dbm</code> tras el link global. Si <code>pnpm link --global</code> se queja del directorio global, ejecuta antes <code>pnpm setup</code> y abre una terminal nueva. Para deshacer el link: <code>pnpm uninstall --global @dbm/cli</code>.</p>
+</blockquote>
+<hr>
+<h2>2. Crear un proyecto nuevo</h2>
+<pre><code class="language-bash">dbm project create ubipark --driver postgres
+</code></pre>
+<p>Esto crea:</p>
+<pre><code>ubipark/
+├── dbm.yaml
+├── migrations/
+├── data/
+└── seeds/
+    ├── development/
+    └── test/
+</code></pre>
+<p>Para un proyecto Mongo sería <code>--driver mongo</code>.</p>
+<h3>2.1 Configurar la conexión</h3>
+<p>Abre <code>ubipark/dbm.yaml</code>:</p>
+<pre><code class="language-yaml">project: ubipark
+
+database:
+  driver: postgres
+  version: 17          # versión que ESPERAS usar
+
+  connection:
+    host: ${DB_HOST}
+    port: 5432
+    database: ubipark
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  schema: ubipark
+  onVersionMismatch: error   # error | warn | ignore
+
+migrations:
+  path: ./migrations
+data:
+  path: ./data
+seeds:
+  path: ./seeds
+</code></pre>
+<p>Las credenciales <strong>nunca</strong> van escritas en el archivo: se resuelven desde
+variables de entorno.</p>
+<pre><code class="language-bash">export DB_HOST=localhost
+export DB_USER=postgres
+export DB_PASSWORD=postgres
+</code></pre>
+<p>No hace falta exportarlas a mano: <code>dbm project create</code> genera un <code>.env</code> junto al <code>dbm.yaml</code> y <code>dbm</code> lo carga solo. Una variable ya exportada en la terminal (o inyectada por CI) siempre gana sobre el <code>.env</code>. Para otros entornos puedes añadir un <code>.env.production</code> (ver <a href="#sec-env">sección 12</a>). Ambos están en el <code>.gitignore</code> del proyecto.</p>
+<blockquote>
+<p><strong>Mongo</strong>: en vez de <code>host/port/username/password</code>, usas <code>connection.uri</code>
+(ej. <code>${MONGO_URI}</code> = <code>mongodb://localhost:27017</code>) y <code>connection.database</code>.</p>
+</blockquote>
+<h3>2.2 Validar que todo esté bien</h3>
+<pre><code class="language-bash">cd ubipark
+dbm validate ubipark
+</code></pre>
+<p>Deberías ver algo así:</p>
+<pre><code>✓ Configuration
+✓ Database connection
+✓ Database engine — postgres
+✓ Database version — configured 17 / detected 17.5
+✓ Migration numbering
+✓ Duplicate migrations
+✓ Checksums
+✓ Migration history
+✓ Driver compatibility
+</code></pre>
+<p>Si <code>Database version</code> marca ✗, significa que el motor real no coincide con lo
+configurado. Ajusta <code>database.version</code> en el <code>dbm.yaml</code> o instala/usa la
+versión correcta.</p>
+<hr>
+<h2>3. Crear tu primera migración estructural</h2>
+<pre><code class="language-bash">dbm migration create ubipark create_parkings
+</code></pre>
+<p>Esto crea <code>migrations/001_create_parkings.sql</code> con un esqueleto. Edítalo:</p>
+<pre><code class="language-sql">-- dbm:meta
+-- irreversible: false
+-- dbm:end
+
+CREATE TABLE parkings (
+    id         SERIAL PRIMARY KEY,
+    nombre     TEXT NOT NULL,
+    capacity   INTEGER,
+    deleted_at TIMESTAMPTZ
+);
+</code></pre>
+<p>Si quieres que sea reversible, crea también el archivo de &quot;down&quot; con el mismo
+nombre + <code>.down</code>:</p>
+<pre><code class="language-bash">cat &gt; migrations/001_create_parkings.down.sql &lt;&lt; &#39;EOF&#39;
+DROP TABLE parkings;
+EOF
+</code></pre>
+<p>Si <strong>no</strong> creas el <code>.down.sql</code>, <code>dbm</code> marca automáticamente la migración como
+irreversible (no podrás hacer <code>rollback</code> de ella, y no fingirá que puede).</p>
+<h3>Bloque de metadata (opcional)</h3>
+<p>Al inicio de cualquier archivo (SQL o TS) puedes declarar:</p>
+<pre><code class="language-sql">-- dbm:meta
+-- irreversible: true
+-- requires:
+--   postgres:
+--     minVersion: 15
+-- dbm:end
+</code></pre>
+<ul>
+<li><code>irreversible: true</code> → bloquea el rollback aunque exista un <code>.down.sql</code>.</li>
+<li><code>requires</code> → exige una versión mínima/máxima del motor. Si el proyecto usa
+una versión menor, <code>dbm validate</code> / <code>dbm migrate</code> fallan con el mensaje
+exacto de qué versión hace falta.</li>
+</ul>
+<blockquote>
+<p><strong>Mongo</strong>: en vez de <code>.sql</code>, tus migraciones son <code>.ts</code> con <code>export async function up(db) {...}</code> y opcionalmente <code>down(db)</code>. El mismo bloque de
+metadata funciona con <code>//</code> en vez de <code>--</code>.</p>
+</blockquote>
+<hr>
+<h2>4. Ejecutar migraciones</h2>
+<pre><code class="language-bash">dbm migrate ubipark
+</code></pre>
+<p>En local no hace falta escribir <code>--env</code>: por defecto vale <code>development</code>. Antes de migrar, <code>dbm</code> imprime una línea <code>Target: ubipark → postgres host:5432/base (env: development)</code> para que veas contra qué base vas a operar. Mira la <a href="#sec-env">sección 12</a> para saber cuándo sí usar <code>--env</code>.</p>
+<p>Salida esperada:</p>
+<pre><code>Migrations
+  ✓ 001_create_parkings (4ms)
+</code></pre>
+<p>Si vuelves a correr el mismo comando, no pasa nada (ya está aplicada):</p>
+<pre><code>Migrations
+  - 001_create_parkings (ya ejecutada)
+</code></pre>
+<h3>Dry-run</h3>
+<p>Para ver qué se ejecutaría sin tocar la base:</p>
+<pre><code class="language-bash">dbm migrate ubipark --dry-run
+</code></pre>
+<h3>Ver el estado</h3>
+<pre><code class="language-bash">dbm status ubipark
+</code></pre>
+<pre><code>Project: ubipark
+Driver: postgres  |  Configured: 17  |  Detected: 17.5
+
+┌───────────┬─────────┬──────────────────┬──────────┐
+│ Type      │ Version │ Name             │ Status   │
+├───────────┼─────────┼──────────────────┼──────────┤
+│ migration │ 001     │ create_parkings  │ applied  │
+└───────────┴─────────┴──────────────────┴──────────┘
+</code></pre>
+<hr>
+<h2>5. Migraciones de datos (cambiar datos existentes)</h2>
+<p>Distinto de una migración estructural: aquí transformas datos ya cargados.</p>
+<pre><code class="language-bash">dbm data create ubipark normalize_names
+</code></pre>
+<p>Edita <code>data/002_normalize_names.sql</code>:</p>
+<pre><code class="language-sql">-- dbm:meta
+-- irreversible: true
+-- dbm:end
+
+UPDATE parkings
+SET nombre = TRIM(nombre)
+WHERE nombre IS NOT NULL;
+</code></pre>
+<p>Y para un soft delete:</p>
+<pre><code class="language-bash">dbm data create ubipark deactivate_old_parkings
+</code></pre>
+<pre><code class="language-sql">-- dbm:meta
+-- irreversible: false
+-- dbm:end
+
+UPDATE parkings
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE nombre = &#39;Parking Obsoleto&#39;;
+</code></pre>
+<pre><code class="language-bash">cat &gt; data/003_deactivate_old_parkings.down.sql &lt;&lt; &#39;EOF&#39;
+UPDATE parkings SET deleted_at = NULL WHERE nombre = &#39;Parking Obsoleto&#39;;
+EOF
+</code></pre>
+<p>Corre todo junto con <code>dbm migrate</code> (migrations + data changes se ejecutan en
+la misma orden numérica dentro de cada categoría):</p>
+<pre><code class="language-bash">dbm migrate ubipark
+</code></pre>
+<hr>
+<h2>6. Seeds (datos iniciales / de prueba)</h2>
+<pre><code class="language-bash">dbm seed create ubipark parkings_demo
+</code></pre>
+<p>Sin <code>--env</code> el seed se crea para <code>development</code>. Esto crea <code>seeds/development/001_parkings_demo.sql</code>. Diséñalo para ser
+<strong>idempotente</strong> si planeas re-ejecutarlo:</p>
+<pre><code class="language-sql">INSERT INTO parkings (nombre, capacity)
+SELECT &#39;Parking Centro&#39;, 120
+WHERE NOT EXISTS (SELECT 1 FROM parkings WHERE nombre = &#39;Parking Centro&#39;);
+</code></pre>
+<p>Ejecutarlo (usa <code>development</code> por defecto):</p>
+<pre><code class="language-bash">dbm seed ubipark
+</code></pre>
+<p>Si necesitas re-correrlo (porque es idempotente):</p>
+<pre><code class="language-bash">dbm seed ubipark --rerun
+</code></pre>
+<p>Aquí <code>--env</code> solo hace falta para seeds de otro entorno, por ejemplo los de <code>seeds/test/</code>:</p>
+<pre><code class="language-bash">dbm seed create ubipark parkings_demo --env test
+dbm seed ubipark --env test
+</code></pre>
+<p>Un seed guardado en <code>seeds/development/</code> <strong>nunca</strong> se ejecuta si corres
+<code>--env production</code>, porque <code>--env</code> elige la carpeta <code>seeds/&lt;env&gt;/</code>. Además, <code>production</code> es un entorno protegido: <code>dbm seed</code> en ese entorno pide confirmación (ver <a href="#sec-env">sección 12</a>).</p>
+<hr>
+<h2>7. Rollback</h2>
+<pre><code class="language-bash">dbm rollback ubipark --steps 1
+</code></pre>
+<p>Reglas importantes:</p>
+<ul>
+<li>Revierte en orden cronológico inverso (lo último ejecutado primero).</li>
+<li>Si encuentra una migración marcada <code>irreversible</code> en el camino, <strong>se
+detiene ahí</strong> y no sigue revirtiendo lo anterior — no finge que puede
+recuperar datos que no puede recuperar.</li>
+<li>Si quieres corregir algo ya ejecutado, la recomendación del spec es no
+tocar el archivo original: crea una migración nueva que corrija lo
+necesario (<code>dbm migration create ubipark fix_normalized_names</code>).</li>
+</ul>
+<hr>
+<h2>8. Validación de compatibilidad de motor</h2>
+<p>Si una migración necesita, por ejemplo, PostgreSQL 15+:</p>
+<pre><code class="language-yaml">-- dbm:meta
+-- requires:
+--   postgres:
+--     minVersion: 15
+-- dbm:end
+</code></pre>
+<p>y tu proyecto está en PostgreSQL 13, <code>dbm validate</code> (o <code>dbm migrate</code>) falla
+así:</p>
+<pre><code>✗ Driver compatibility — 004_create_feature_x requiere feature ... no disponible
+</code></pre>
+<p>o, si es un requisito de versión general:</p>
+<pre><code>ERROR
+Migration 008_create_feature_x requires postgres &gt;= 15.
+Current version: 13
+</code></pre>
+<p>Exit code: <code>3</code> (incompatibilidad de versión).</p>
+<hr>
+<h2>9. Uso en CI/CD</h2>
+<pre><code class="language-bash">dbm migrate ubipark --env production --non-interactive
+</code></pre>
+<p>En CI usa los dos flags. <code>--env production</code> carga <code>.env.production</code> (si existe) y etiqueta el historial. <code>--non-interactive</code> es necesario porque <code>production</code> es un entorno protegido: <code>dbm</code> pide confirmación antes de modificarlo y, sin terminal y sin el flag, falla con código 1 en vez de quedarse esperando. En CI las credenciales siguen viniendo de las variables (<code>DB_HOST</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>), que tienen prioridad sobre cualquier <code>.env</code>.</p>
+<p>Revisa el código de salida en tu pipeline:</p>
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Éxito</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Error genérico</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Configuración inválida</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Incompatibilidad de versión</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Checksum inválido (archivo modificado tras ejecutarse)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Migration lock (ya hay una ejecución en curso)</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo en GitHub Actions:</p>
+<pre><code class="language-yaml">- name: Run migrations
+  env:
+    DB_HOST: ${{ secrets.DB_HOST }}
+    DB_USER: ${{ secrets.DB_USER }}
+    DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  run: |
+    cd ubipark
+    dbm migrate ubipark --env production --non-interactive
+</code></pre>
+<hr>
+<h2>10. Qué pasa si alguien modifica un archivo ya ejecutado</h2>
+<p>Si editas <code>001_create_parkings.sql</code> después de que ya se ejecutó, el checksum
+cambia y <code>dbm</code> lo detecta:</p>
+<pre><code>ERROR
+Migration 001_create_parkings fue modificada después de haberse ejecutado.
+Expected checksum: 8d33fc17...
+Current checksum:  2bafc4b8...
+</code></pre>
+<p>La ejecución se detiene (exit code <code>4</code>). La forma correcta de corregir un
+error es crear una nueva migración, no editar la vieja.</p>
+<hr>
+<h2>11. Múltiples proyectos y motores en el mismo repo</h2>
+<p>No hay nada especial que hacer: cada proyecto es una carpeta con su propio
+<code>dbm.yaml</code>. Puedes tener, por ejemplo:</p>
+<pre><code>ubipark/      (postgres 17)
+legacy-app/   (postgres 13)
+trainers/     (mongo 8)
+</code></pre>
+<p>y correr los comandos apuntando a cada uno:</p>
+<pre><code class="language-bash">dbm migrate ubipark
+dbm migrate legacy-app
+dbm migrate trainers
+</code></pre>
+<p><code>dbm project list</code> (corrido desde el directorio que contiene todas las
+carpetas) te muestra cuáles detecta:</p>
+<pre><code class="language-bash">dbm project list
+</code></pre>
+<hr>
+<h2 id="sec-env">12. Entornos: <code>--env</code> y <code>--non-interactive</code></h2>
+<p>Regla corta: <strong>en local no necesitas escribir ninguno de los dos</strong>. Se usan para apuntar a otros entornos (staging, production) y en CI/CD.</p>
+<h3>Cómo se elige el entorno</h3>
+<p>El entorno efectivo es, en este orden: el flag <code>--env</code>, la variable <code>DBM_ENV</code>, o <code>development</code>. Sirve para tres cosas:</p>
+<ol>
+<li><strong>Elegir la conexión.</strong> Con <code>--env production</code> se carga <code>.env.production</code> (si existe) antes que <code>.env</code>. Prioridad: variables exportadas en la terminal &gt; <code>.env.&lt;entorno&gt;</code> &gt; <code>.env</code>.</li>
+<li><strong>Elegir los seeds</strong> de la carpeta <code>seeds/&lt;entorno&gt;/</code>.</li>
+<li><strong>Etiquetar el historial</strong> (columna <code>environment</code> de <code>dbm_history</code>).</li>
+</ol>
+<p>Ejemplo: tu <code>.env</code> apunta a la base local y <code>.env.production</code> solo redefine lo que cambia:</p>
+<pre><code class="language-bash"># .env
+DB_HOST=localhost
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=ubipark_dev
+
+# .env.production
+DB_HOST=prod.miservidor.com
+DB_USER=app
+DB_PASSWORD=...
+DB_NAME=ubipark
+</code></pre>
+<p>Para que <code>DB_NAME</code> funcione, en el <code>dbm.yaml</code> escribe <code>database: ${DB_NAME}</code>. Con eso:</p>
+<pre><code class="language-bash">dbm migrate ubipark                  # base local (.env)
+dbm migrate ubipark --env production # base de producción (.env.production)
+</code></pre>
+<p>Cada <code>migrate</code>, <code>rollback</code> y <code>seed</code> imprime <code>Target: ...</code> con el motor, host y base (sin contraseñas). <strong>Léelo antes de confirmar.</strong></p>
+<h3>Qué comandos usan <code>--env</code></h3>
+<table>
+<thead>
+<tr><th>Comando</th><th>Efecto de <code>--env</code></th><th>¿Hace falta escribirlo?</th></tr>
+</thead>
+<tbody>
+<tr><td><code>migrate</code>, <code>rollback</code></td><td>Carga <code>.env.&lt;entorno&gt;</code>, etiqueta el historial y aplica la protección de entornos.</td><td>Solo para apuntar a otro entorno (production, staging).</td></tr>
+<tr><td><code>seed</code>, <code>seed create</code></td><td>Elige la carpeta <code>seeds/&lt;entorno&gt;/</code> y carga <code>.env.&lt;entorno&gt;</code>.</td><td>Solo si no es <code>development</code> (p. ej. <code>--env test</code>).</td></tr>
+<tr><td><code>status</code></td><td>Carga <code>.env.&lt;entorno&gt;</code> y lista los seeds de ese entorno.</td><td>Solo para consultar otro entorno.</td></tr>
+<tr><td><code>validate</code>, <code>database version</code>, <code>project ...</code>, <code>migration create</code>, <code>data create</code></td><td>No aceptan <code>--env</code>.</td><td>No existe.</td></tr>
+</tbody>
+</table>
+<h3>Entornos protegidos y <code>--non-interactive</code></h3>
+<p>Por defecto <code>production</code> es un entorno protegido (se puede cambiar con <code>protectedEnvironments: [production, staging]</code> en el <code>dbm.yaml</code>). Antes de <code>migrate</code>, <code>rollback</code> o <code>seed</code> en un entorno protegido, <code>dbm</code> pide escribir el nombre del entorno:</p>
+<pre><code>Target: ubipark → postgres prod.miservidor.com:5432/ubipark (env: production)
+⚠ Vas a modificar un entorno protegido (production).
+Escribe "production" para continuar:
+</code></pre>
+<ul>
+<li>Si escribes otra cosa, se cancela (código 1) y no se toca la base.</li>
+<li><code>--dry-run</code> nunca pide confirmación, porque no modifica nada.</li>
+<li><code>--non-interactive</code> salta la confirmación. Úsalo <strong>solo en CI/CD</strong> o en scripts.</li>
+<li>Sin terminal interactiva y sin <code>--non-interactive</code>, el comando falla con código 1 en vez de quedarse esperando.</li>
+<li>En entornos no protegidos (development, test) <code>--non-interactive</code> no cambia nada, así que no lo escribas.</li>
+</ul>
+<blockquote>
+<p><strong>Cuidado:</strong> si apuntas a producción exportando variables (por ejemplo <code>DB_HOST</code>) pero escribes <code>--env development</code> (o nada), <code>dbm</code> no te pedirá confirmación, porque la protección depende del entorno y no de la base real. Por eso conviene usar siempre <code>--env production</code> con la base de producción y revisar la línea <code>Target</code>.</p>
+</blockquote>
+<h3>Recetas</h3>
+<table>
+<thead>
+<tr><th>Situación</th><th>Comando</th></tr>
+</thead>
+<tbody>
+<tr><td>Migrar en local</td><td><code>dbm migrate ubipark</code></td></tr>
+<tr><td>Ver qué se ejecutaría</td><td><code>dbm migrate ubipark --dry-run</code></td></tr>
+<tr><td>Cargar seeds de desarrollo</td><td><code>dbm seed ubipark</code></td></tr>
+<tr><td>Cargar seeds de pruebas</td><td><code>dbm seed ubipark --env test</code></td></tr>
+<tr><td>Migrar producción a mano</td><td><code>dbm migrate ubipark --env production</code> y escribir <code>production</code> para confirmar</td></tr>
+<tr><td>Migrar producción desde CI</td><td><code>dbm migrate ubipark --env production --non-interactive</code></td></tr>
+</tbody>
+</table>
+<hr>
+<h2>13. Referencia rápida de comandos</h2>
+<pre><code class="language-bash">dbm project list
+dbm project create &lt;name&gt; --driver postgres|mongo
+
+dbm migration create &lt;project&gt; &lt;name&gt;
+dbm data create &lt;project&gt; &lt;name&gt;
+dbm seed create &lt;project&gt; &lt;name&gt; [--env &lt;env&gt;]   # --env solo si no es development
+
+dbm migrate &lt;project&gt; [--env &lt;env&gt;] [--dry-run] [--non-interactive]
+dbm rollback &lt;project&gt; [--steps N] [--env &lt;env&gt;] [--non-interactive]
+dbm seed &lt;project&gt; [--env &lt;env&gt;] [--dry-run] [--rerun] [--non-interactive]
+# --env solo hace falta si no es development; --non-interactive solo en CI/entornos protegidos
+
+dbm status &lt;project&gt; [--env &lt;env&gt;]
+dbm validate &lt;project&gt;
+dbm database version &lt;project&gt;
+</code></pre>
+<hr>
+<h2>Ejemplos completos incluidos</h2>
+<p>El proyecto trae dos ejemplos ya armados en <code>examples/</code>:</p>
+<ul>
+<li><code>examples/ubipark</code> — PostgreSQL, con migraciones, data changes y seeds de
+development/test. Probado end-to-end contra un Postgres real.</li>
+<li><code>examples/trainers</code> — MongoDB, con el mismo tipo de estructura en <code>.ts</code>.</li>
+</ul>
+<p>Puedes copiar cualquiera de las dos carpetas como punto de partida en vez de
+usar <code>dbm project create</code>.</p>
+
+</body></html>

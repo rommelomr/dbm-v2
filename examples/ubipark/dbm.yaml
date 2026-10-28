@@ -1,0 +1,24 @@
+project: ubipark
+
+database:
+  driver: postgres
+  version: 16
+
+  connection:
+    host: ${DB_HOST}
+    port: 5432
+    database: ubipark
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  schema: ubipark
+  onVersionMismatch: error
+
+migrations:
+  path: ./migrations
+
+data:
+  path: ./data
+
+seeds:
+  path: ./seeds

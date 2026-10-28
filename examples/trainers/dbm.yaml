@@ -1,0 +1,20 @@
+project: trainers
+
+database:
+  driver: mongo
+  version: 8
+
+  connection:
+    uri: ${MONGO_URI}
+    database: trainers
+
+  onVersionMismatch: error
+
+migrations:
+  path: ./migrations
+
+data:
+  path: ./data
+
+seeds:
+  path: ./seeds
